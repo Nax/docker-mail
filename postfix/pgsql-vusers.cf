@@ -1,0 +1,4 @@
+hosts = localhost
+dbname = vmail
+user = vmail
+query = SELECT 1 FROM users WHERE username = '%u' AND domain = '%d' LIMIT 1

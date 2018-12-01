@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if [ ! -z "$DOMAIN" ]; then
+    /usr/local/nginx/nginx
+    while ! nc -z localhost 80; do sleep 1; done
+    /usr/local/sbin/dehydrated --register --accept-terms
+    /usr/local/sbin/renew-certs
+    /usr/local/nginx/nginx -s stop
+fi
+
+echo
+echo
+echo
+echo
+echo
+echo "===== DKIM PUBLIC KEY ====="
+echo
+cat /data/dkim/dkim.txt
+echo
+echo "==========================="
+echo
+echo
+echo
+echo
+echo
+
+exec supervisord -n -c /etc/supervisord.conf

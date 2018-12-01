@@ -1,0 +1,3 @@
+#!/bin/sh
+
+psql vmail vmail -c "INSERT INTO users (username, domain, password) VALUES ('$1', '$2', '$(doveadm pw -s BLF-CRYPT -p "$3")');"

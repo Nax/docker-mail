@@ -1,0 +1,1 @@
+37 4 * * * root /usr/local/sbin/renew-certs

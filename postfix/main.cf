@@ -1,0 +1,74 @@
+compatibility_level = 2
+
+maillog_file=/dev/stdout
+
+queue_directory = /var/spool/postfix
+command_directory = /usr/sbin
+daemon_directory = /usr/libexec/postfix
+data_directory = /var/lib/postfix
+
+mail_owner = postfix
+default_privs = nobody
+
+myhostname = __DOMAIN__
+mydomain = $myhostname
+myorigin = $myhostname
+
+inet_interfaces = all
+mydestination = $myhostname, localhost.$mydomain, localhost
+
+smtpd_use_tls = yes
+smtpd_tls_security_level = encrypt
+smtpd_tls_auth_only = yes
+smtpd_tls_cert_file = /data/ssl/certs/cert.pem
+smtpd_tls_key_file = /data/ssl/certs/key.pem
+smtpd_tls_mandatory_protocols = !SSLv2,!SSLv3,!TLSv1,!TLSv1.1
+smtpd_tls_protocols = !SSLv2,!SSLv3,!TLSv1,!TLSv1.1
+smtpd_tls_dh1024_param_file = /data/ssl/dhparam.pem
+smtpd_tls_mandatory_ciphers = medium
+
+tls_medium_cipherlist = EECDH+AESGCM:EDH+AESGCM
+tls_preempt_cipherlist = yes
+
+local_recipient_maps =
+
+unknown_local_recipient_reject_code = 550
+mynetworks_style = host
+relay_domains = $mydestination
+
+in_flow_delay = 1s
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+recipient_delimiter = +
+
+smtpd_banner = $myhostname
+
+local_destination_concurrency_limit = 32
+default_destination_concurrency_limit = 32
+
+inet_protocols = all
+meta_directory = /etc/postfix
+shlib_directory = no
+
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+virtual_mailbox_domains = pgsql:/etc/postfix/pgsql-vdomains.cf
+virtual_mailbox_maps = pgsql:/etc/postfix/pgsql-vusers.cf
+virtual_alias_maps = pgsql:/etc/postfix/pgsql-valias.cf
+
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+queue_directory = /var/spool/postfix
+smtpd_sasl_auth_enable = yes
+
+milter_protocol = 2
+milter_default_action = accept
+milter_macro_daemon_name=ORIGINATING
+smtpd_milters = unix:/var/run/opendkim/opendkim.sock
+non_smtpd_milters = $smtpd_milters
+
+smtpd_sasl_auth_enable = yes
+smtpd_reject_unlisted_recipient = yes
+smtpd_helo_restrictions = permit_sasl_authenticated, reject_unknown_helo_hostname
+smtpd_sender_restrictions = reject_unknown_sender_domain
+smtpd_recipient_restrictions = reject_unlisted_recipient
+smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination

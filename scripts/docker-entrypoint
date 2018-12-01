@@ -1,0 +1,82 @@
+#!/bin/sh
+
+if [ ! -z "$DOMAIN" ]; then
+    export DOMAIN_CONF="$DOMAIN"
+else
+    export DOMAIN_CONF="localhost"
+fi
+
+if [ ! -e "/data/db" ]; then
+    mkdir -p /data/db
+    chown postgres:postgres /data/db
+    su postgres /bin/sh -c "initdb -E UTF-8 -D /data/db && pg_ctl start -D /data/db"
+    createuser -U postgres vmail
+    createdb -U postgres -O vmail vmail
+    psql vmail vmail <<'EOF'
+    CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL,
+        DOMAIN TEXT NOT NULL,
+        PASSWORD TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX idx_users_username_domain ON users (username, domain);
+    CREATE UNIQUE INDEX idx_users_domain ON users (domain);
+EOF
+    su postgres /bin/sh -c "pg_ctl stop -D /data/db"
+fi
+
+if [ ! -e "/data/mail" ]; then
+    mkdir -p /data/mail
+    chown vmail:vmail /data/mail
+    chmod 700 /data/mail
+fi
+
+if [ ! -e "/var/www/dehydrated/.well-known/acme-challenge" ]; then
+    mkdir -p /var/www/dehydrated/.well-known/acme-challenge
+    chown -R nginx:nginx /var/www
+    chmod 770 /var/www
+fi
+
+if [ ! -e "/data/ssl/certs/cert.pem" ] || [ ! -e "/data/ssl/certs/key.pem" ]; then
+    mkdir -p /data/ssl/certs
+    cd /data/ssl/certs
+    openssl req -x509 -newkey rsa:4096 -nodes -sha256 -subj '/CN=localhost' -keyout key.pem -out cert.pem -days 365
+    chmod 600 key.pem
+    chmod 600 cert.pem
+    cd /
+fi
+
+if [ ! -e "/data/ssl/dhparam.pem" ]; then
+    mkdir -p /data/ssl
+    cd /data/ssl
+    openssl dhparam -dsaparam -out dhparam.pem 4096
+    chmod 600 dhparam.pem
+    cd /
+fi
+
+if [ ! -e "/etc/aliases" ]; then
+    touch /etc/aliases
+    newaliases
+fi
+
+if [ ! -e "/etc/dehydrated/domains.txt" ]; then
+    echo "$DOMAIN_CONF" > /etc/dehydrated/domains.txt
+fi
+
+if [ ! -e "/data/dehydrated" ]; then
+    mkdir -p /data/dehydrated
+fi
+
+if [ ! -e "/data/dkim" ]; then
+    mkdir -p /data/dkim
+    echo "Generating DKIM keys"
+    cd /data/dkim
+    opendkim-genkey -r -s dkim -b 2048
+    chmod 644 dkim.txt
+    cd /
+    chown -R opendkim:opendkim /data/dkim
+fi
+
+sed -i "s/__DOMAIN__/$DOMAIN/g" /etc/postfix/main.cf
+
+exec "$@"

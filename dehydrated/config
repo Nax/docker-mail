@@ -1,0 +1,16 @@
+CA="https://acme-v02.api.letsencrypt.org/directory"
+CHALLENGETYPE="http-01"
+
+BASEDIR=/data/dehydrated
+DOMAINS_TXT="/etc/dehydrated/domains.txt"
+CERTDIR="${BASEDIR}/certs"
+ALPNCERTDIR="${BASEDIR}/alpn-certs"
+ACCOUNTDIR="${BASEDIR}/accounts"
+WELLKNOWN="/var/www/dehydrated/.well-known/acme-challenge"
+
+KEYSIZE="4096"
+RENEW_DAYS="30"
+PRIVATE_KEY_RENEW="yes"
+PRIVATE_KEY_ROLLOVER="no"
+KEY_ALGO=rsa
+LOCKFILE="${BASEDIR}/lock"
