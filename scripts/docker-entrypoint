@@ -40,7 +40,7 @@ fi
 if [ ! -e "/data/ssl/certs/cert.pem" ] || [ ! -e "/data/ssl/certs/key.pem" ]; then
     mkdir -p /data/ssl/certs
     cd /data/ssl/certs
-    openssl req -x509 -newkey rsa:4096 -nodes -sha256 -subj '/CN=localhost' -keyout key.pem -out cert.pem -days 365
+    openssl req -x509 -newkey rsa:2048 -nodes -sha256 -subj '/CN=localhost' -keyout key.pem -out cert.pem -days 365
     chmod 600 key.pem
     chmod 600 cert.pem
     cd /
@@ -49,7 +49,7 @@ fi
 if [ ! -e "/data/ssl/dhparam.pem" ]; then
     mkdir -p /data/ssl
     cd /data/ssl
-    openssl dhparam -dsaparam -out dhparam.pem 4096
+    openssl dhparam -dsaparam -out dhparam.pem 2048
     chmod 600 dhparam.pem
     cd /
 fi

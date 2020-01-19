@@ -1,9 +1,9 @@
-FROM alpine:3.10.2
+FROM alpine:3.11.3
 
-ENV POSTGRES_VERSION=12.0
-ENV DOVECOT_VERSION=2.3.8
-ENV POSTFIX_VERSION=3.4.7
-ENV NGINX_VERSION 1.17.4
+ENV POSTGRES_VERSION=12.1
+ENV DOVECOT_VERSION=2.3.9.2
+ENV POSTFIX_VERSION=3.4.8
+ENV NGINX_VERSION 1.17.7
 ENV DEHYDRATED_VERSION 0.6.5
 ENV OPENDKIM_VERSION 2.10.3
 
@@ -66,7 +66,7 @@ RUN apk add --no-cache --update \
     && rm -rf "$tmpdir" \
     && tmpdir="$(mktemp -d)"   \
     && cd "$tmpdir" \
-    && curl -L "https://www.dovecot.org/releases/${DOVECOT_VERSION%.*}/dovecot-${DOVECOT_VERSION}.tar.gz" -O \
+    && curl -L "https://www.dovecot.org/releases/$(echo $DOVECOT_VERSION | cut -f 1,2 -d . -)/dovecot-${DOVECOT_VERSION}.tar.gz" -O \
     && tar xvf dovecot-${DOVECOT_VERSION}.tar.gz \
     && cd dovecot-${DOVECOT_VERSION} \
     && ./configure \

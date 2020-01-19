@@ -8,7 +8,7 @@ ALPNCERTDIR="${BASEDIR}/alpn-certs"
 ACCOUNTDIR="${BASEDIR}/accounts"
 WELLKNOWN="/var/www/dehydrated/.well-known/acme-challenge"
 
-KEYSIZE="4096"
+KEYSIZE="2048"
 RENEW_DAYS="30"
 PRIVATE_KEY_RENEW="yes"
 PRIVATE_KEY_ROLLOVER="no"
