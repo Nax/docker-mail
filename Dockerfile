@@ -52,6 +52,8 @@ RUN apk add --no-cache --update \
     && adduser -D -S -s /sbin/nologin -H -G nginx -u 460 nginx \
     && addgroup -S -g 470 opendkim \
     && adduser -D -S -s /sbin/nologin -H -G opendkim -u 470 opendkim \
+    && addgroup -S -g 480 postgres \
+    && adduser -D -S -s /sbin/nologin -H -G postgres -u 480 postgres \
     && tmpdir="$(mktemp -d)"   \
     && cd "$tmpdir" \
     && curl -L "https://ftp.postgresql.org/pub/source/v${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.tar.bz2" -O \
