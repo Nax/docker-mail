@@ -1,43 +1,44 @@
-FROM alpine:3.11.3
+FROM alpine:3.12.0
 
-ENV POSTGRES_VERSION=12.1
-ENV DOVECOT_VERSION=2.3.9.2
-ENV POSTFIX_VERSION=3.4.8
-ENV NGINX_VERSION 1.17.7
+ENV POSTGRES_VERSION=12.4
+ENV DOVECOT_VERSION=2.3.11.3
+ENV POSTFIX_VERSION=3.5.6
+ENV NGINX_VERSION 1.19.2
 ENV DEHYDRATED_VERSION 0.6.5
 ENV OPENDKIM_VERSION 2.10.3
 
 RUN apk add --no-cache --update \
-        curl \
-        libmilter \
-        openssl \
-        icu \
-        libnsl \
-        db \
-        pcre \
-        cyrus-sasl \
-        zlib \
-        bzip2 \
-        coreutils \
-        tini \
-        supervisor \
-        bash \
+    curl \
+    libmilter \
+    openssl \
+    icu \
+    libnsl \
+    db \
+    pcre \
+    cyrus-sasl \
+    zlib \
+    bzip2 \
+    coreutils \
+    tini \
+    supervisor \
+    bash \
+    perl \
     && apk add --no-cache --virtual .build-deps \
-        build-base \
-        automake \
-        autoconf \
-        libtool \
-        libmilter-dev \
-        openssl-dev \
-        icu-dev \
-        libnsl-dev \
-        db-dev \
-        pcre-dev\
-        cyrus-sasl-dev \
-        zlib-dev \
-        bzip2-dev \
-        bsd-compat-headers \
-        linux-headers \
+    build-base \
+    automake \
+    autoconf \
+    libtool \
+    libmilter-dev \
+    openssl-dev \
+    icu-dev \
+    libnsl-dev \
+    db-dev \
+    pcre-dev\
+    cyrus-sasl-dev \
+    zlib-dev \
+    bzip2-dev \
+    bsd-compat-headers \
+    linux-headers \
     && addgroup -S -g 400 dovecot \
     && adduser -D -S -s /sbin/nologin -H -G dovecot -u 400 dovecot \
     && addgroup -S -g 401 dovenull \
@@ -72,11 +73,11 @@ RUN apk add --no-cache --update \
     && tar xvf dovecot-${DOVECOT_VERSION}.tar.gz \
     && cd dovecot-${DOVECOT_VERSION} \
     && ./configure \
-        --with-sql=yes \
-        --with-pgsql \
-        --with-zlib \
-        --with-bzlib \
-        --with-ssl=openssl \
+    --with-sql=yes \
+    --with-pgsql \
+    --with-zlib \
+    --with-bzlib \
+    --with-ssl=openssl \
     && make -j16 \
     && make install \
     && cd / \
@@ -86,8 +87,6 @@ RUN apk add --no-cache --update \
     && curl -L "http://cdn.postfix.johnriley.me/mirrors/postfix-release/official/postfix-${POSTFIX_VERSION}.tar.gz" -O \
     && tar xvf postfix-${POSTFIX_VERSION}.tar.gz \
     && cd postfix-${POSTFIX_VERSION} \
-    && curl "https://gist.githubusercontent.com/Nax/0a0eb7a41592c91a41406300772bf9cc/raw/f53abe28da40244217445f4bbda440a1f003efd5/postfix-patch-10-include-stdio.patch" -O \
-    && patch -p1 <postfix-patch-10-include-stdio.patch \
     && make makefiles DEBUG="" CCARGS="-O2 -DUSE_SSL -DUSE_TLS -DUSE_SASL_AUTH -DUSE_CYRUS_SASL -DHAS_PGSQL -I/usr/include/openssl -I/usr/include/sasl -I/usr/include -I/usr/local/include" AUXLIBS="-L/usr/lib -L/usr/local/lib -L/usr/lib/openssl -lssl -lcrypto -L/usr/lib/sasl2 -lsasl2 -lz -lm" AUXLIBS_PGSQL="-L/usr/local/lib -lpq" \
     && make -j16 \
     && chmod +x ./postfix-install \
@@ -100,13 +99,13 @@ RUN apk add --no-cache --update \
     && tar xvf nginx-${NGINX_VERSION}.tar.gz \
     && cd nginx-${NGINX_VERSION} \
     && ./configure \
-        --sbin-path=/usr/local/nginx/nginx \
-        --conf-path=/usr/local/nginx/nginx.conf \
-        --pid-path=/usr/local/nginx/nginx.pid \
-        --with-pcre \
-        --with-http_ssl_module \
-        --with-stream \
-        --with-cc-opt="-g0 -O2" \
+    --sbin-path=/usr/local/nginx/nginx \
+    --conf-path=/usr/local/nginx/nginx.conf \
+    --pid-path=/usr/local/nginx/nginx.pid \
+    --with-pcre \
+    --with-http_ssl_module \
+    --with-stream \
+    --with-cc-opt="-g0 -O2" \
     && make -j16 \
     && make install \
     && cd / \
@@ -130,8 +129,8 @@ RUN apk add --no-cache --update \
     && autoconf \
     && automake \
     && ./configure \
-        --enable-shared \
-        --disable-static \
+    --enable-shared \
+    --disable-static \
     && CC="-g0 -O2" make -j16 \
     && make install \
     && cd / \
@@ -139,7 +138,8 @@ RUN apk add --no-cache --update \
     && mkdir -p /var/run/opendkim \
     && chmod 755 /var/run/opendkim \
     && chown -R opendkim:opendkim /var/run/opendkim \
-    && apk del .build-deps
+    && apk del .build-deps \
+    && ln -s /usr/local/sbin/renew-certs /etc/periodic/daily
 
 COPY dovecot /usr/local/etc/dovecot
 COPY postfix /etc/postfix
@@ -147,7 +147,6 @@ COPY nginx /usr/local/nginx
 COPY dehydrated /etc/dehydrated
 COPY supervisord.conf /etc
 COPY opendkim /etc/opendkim
-COPY cron /etc
 COPY scripts /usr/local/sbin
 
 ENTRYPOINT ["tini", "--", "/usr/local/sbin/docker-entrypoint"]

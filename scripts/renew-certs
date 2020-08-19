@@ -1,14 +1,19 @@
 #!/bin/sh
 
-if [ -z "$DOMAIN" ]; then
+echo "Renewing certs..."
+
+if [ -z "__DOMAIN__" ]; then
+  echo "No domain, nothing to do (running on localhost?)"
   exit 0
 fi
 
 /usr/local/sbin/dehydrated -c
 
-ln -fs "/data/dehydrated/certs/$DOMAIN/fullchain.pem" /data/ssl/certs/cert.pem
-ln -fs "/data/dehydrated/certs/$DOMAIN/privkey.pem" /data/ssl/certs/key.pem
+ln -fs "/data/dehydrated/certs/__DOMAIN__/fullchain.pem" /data/ssl/certs/cert.pem
+ln -fs "/data/dehydrated/certs/__DOMAIN__/privkey.pem" /data/ssl/certs/key.pem
 
 /usr/local/nginx/nginx -s reload >/dev/null 2>&1
 postfix reload >/dev/null 2>&1
 dovecot reload >/dev/null 2>&1
+
+echo "Done."

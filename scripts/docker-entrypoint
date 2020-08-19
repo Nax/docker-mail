@@ -9,7 +9,7 @@ fi
 if [ ! -e "/data/db" ]; then
     mkdir -p /data/db
     chown postgres:postgres /data/db
-    su postgres /bin/sh -c "initdb -E UTF-8 -D /data/db && pg_ctl start -D /data/db"
+    su -s /bin/sh postgres /bin/sh -c "initdb -E UTF-8 -D /data/db && pg_ctl start -D /data/db"
     createuser -U postgres vmail
     createdb -U postgres -O vmail vmail
     psql vmail vmail <<'EOF'
@@ -22,7 +22,7 @@ if [ ! -e "/data/db" ]; then
     CREATE UNIQUE INDEX idx_users_username_domain ON users (username, domain);
     CREATE UNIQUE INDEX idx_users_domain ON users (domain);
 EOF
-    su postgres /bin/sh -c "pg_ctl stop -D /data/db"
+    su -s /bin/sh postgres /bin/sh -c "pg_ctl stop -D /data/db"
 fi
 
 if [ ! -e "/data/mail" ]; then
@@ -77,6 +77,7 @@ if [ ! -e "/data/dkim" ]; then
     chown -R opendkim:opendkim /data/dkim
 fi
 
-sed -i "s/__DOMAIN__/$DOMAIN/g" /etc/postfix/main.cf
+sed -i "s/__DOMAIN__/$DOMAIN_CONF/g" /etc/postfix/main.cf
+sed -i "s/__DOMAIN__/$DOMAIN/g" /usr/local/sbin/renew-certs
 
 exec "$@"
