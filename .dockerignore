@@ -1,0 +1,4 @@
+*
+!config
+!scripts
+!supervisord.conf

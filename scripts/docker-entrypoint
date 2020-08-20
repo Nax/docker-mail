@@ -1,34 +1,38 @@
 #!/bin/sh
 
 if [ ! -z "$DOMAIN" ]; then
-    export DOMAIN_CONF="$DOMAIN"
+  export DOMAIN_CONF="$DOMAIN"
 else
-    export DOMAIN_CONF="localhost"
+  export DOMAIN_CONF="localhost"
 fi
 
+# Create the postgres database itself if it doesn't exist
 if [ ! -e "/data/db" ]; then
-    mkdir -p /data/db
-    chown postgres:postgres /data/db
-    su -s /bin/sh postgres /bin/sh -c "initdb -E UTF-8 -D /data/db && pg_ctl start -D /data/db"
-    createuser -U postgres vmail
-    createdb -U postgres -O vmail vmail
-    psql vmail vmail <<'EOF'
-    CREATE TABLE users (
-        id SERIAL PRIMARY KEY,
-        username TEXT NOT NULL,
-        DOMAIN TEXT NOT NULL,
-        PASSWORD TEXT NOT NULL
-    );
-    CREATE UNIQUE INDEX idx_users_username_domain ON users (username, domain);
-    CREATE UNIQUE INDEX idx_users_domain ON users (domain);
-EOF
-    su -s /bin/sh postgres /bin/sh -c "pg_ctl stop -D /data/db"
+  mkdir -p /data/db
+  chown postgres:postgres /data/db
+  su -s /bin/sh postgres /bin/sh -c "initdb -E UTF-8 -D /data/db && pg_ctl start -D /data/db"
+  createuser -U postgres vmail
+  createdb -U postgres -O vmail vmail
+else
+  su -s /bin/sh postgres /bin/sh -c "pg_ctl start -D /data/db"
 fi
+
+# Run migrations and then close pg
+for f in /var/sql/*.sql; do
+  psql vmail vmail -f "${f}"
+done
+su -s /bin/sh postgres /bin/sh -c "pg_ctl stop -D /data/db"
 
 if [ ! -e "/data/mail" ]; then
-    mkdir -p /data/mail
-    chown vmail:vmail /data/mail
-    chmod 700 /data/mail
+  mkdir -p /data/mail
+  chown vmail:vmail /data/mail
+  chmod 700 /data/mail
+fi
+
+if [ ! -e "/data/home" ]; then
+  mkdir -p /data/home
+  chown vmail:vmail /data/home
+  chmod 700 /data/home
 fi
 
 if [ ! -e "/var/www/dehydrated/.well-known/acme-challenge" ]; then
@@ -79,5 +83,7 @@ fi
 
 sed -i "s/__DOMAIN__/$DOMAIN_CONF/g" /etc/postfix/main.cf
 sed -i "s/__DOMAIN__/$DOMAIN/g" /usr/local/sbin/renew-certs
+
+sievec /var/sieve
 
 exec "$@"

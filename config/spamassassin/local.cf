@@ -1,0 +1,32 @@
+report_safe 0
+lock_method flock
+required_score 5.0
+
+use_bayes 1
+bayes_auto_learn 1
+bayes_auto_expire 1
+bayes_store_module Mail::SpamAssassin::BayesStore::PgSQL
+bayes_sql_dsn DBI:Pg:dbname=vmail;host=localhost
+bayes_sql_username vmail
+bayes_sql_override_username vmail
+bayes_ignore_header X-Bogosity
+bayes_ignore_header X-Spam-Flag
+bayes_ignore_header X-Spam-Status
+
+normalize_charset 1
+body_part_scan_size 50000
+rawbody_part_scan_size 500000
+
+ifplugin Mail::SpamAssassin::Plugin::Shortcircuit
+shortcircuit USER_IN_WHITELIST       on
+shortcircuit USER_IN_DEF_WHITELIST   on
+shortcircuit USER_IN_ALL_SPAM_TO     on
+shortcircuit SUBJECT_IN_WHITELIST    on
+
+shortcircuit USER_IN_BLACKLIST       on
+shortcircuit USER_IN_BLACKLIST_TO    on
+shortcircuit SUBJECT_IN_BLACKLIST    on
+
+shortcircuit BAYES_99                spam
+shortcircuit BAYES_00                ham
+endif

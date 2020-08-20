@@ -13,12 +13,11 @@ default_privs = nobody
 myhostname = __DOMAIN__
 mydomain = $myhostname
 myorigin = $myhostname
+mydestination = $myhostname localhost.$mydomain localhost
 
 inet_interfaces = all
-mydestination = $myhostname, localhost.$mydomain, localhost
 
 smtpd_use_tls = yes
-
 smtpd_tls_security_level = may
 smtpd_tls_auth_only = yes
 smtpd_tls_cert_file = /data/ssl/certs/cert.pem

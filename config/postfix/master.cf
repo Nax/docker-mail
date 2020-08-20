@@ -11,11 +11,14 @@
 # ==========================================================================
 smtp      inet  n       -       n       -       -       smtpd
   -o syslog_name=postfix/smtp
+  -o content_filter=spamassassin
 submission inet n       -       n       -       -       smtpd
   -o syslog_name=postfix/submission
+  -o content_filter=spamassassin
 smtps     inet  n       -       n       -       -       smtpd
   -o syslog_name=postfix/smtps
   -o smtpd_tls_wrappermode=yes
+  -o content_filter=spamassassin
 
 #628       inet  n       -       n       -       -       qmqpd
 pickup    unix  n       -       n       60      1       pickup
@@ -45,3 +48,6 @@ lmtp      unix  -       -       n       -       -       lmtp
 anvil     unix  -       -       n       -       1       anvil
 scache    unix  -       -       n       -       1       scache
 postlog   unix-dgram n  -       n       -       1       postlogd
+
+spamassassin unix -     n       n       -       -       pipe
+  user=spamd argv=/usr/local/bin/spamc -U /var/run/spamd/spamd.sock -e /usr/sbin/sendmail -oi -f ${sender} ${recipient}
